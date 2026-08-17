@@ -1,0 +1,37 @@
+name: Update Etsy Listing Link
+
+on:
+  push:
+    paths:
+      - trigger-etsy-link.txt
+
+permissions:
+  contents: write
+
+jobs:
+  update-link:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update Etsy links
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          listing = 'https://www.etsy.com/listing/4557615373/503020-budget-planner-interactive-html?sr_prefetch=1&pf_from=shop_home&ref=shop_home_active_1&pro=1&dd=1&logging_key=b345e6ca8a968a3461b587ede60d5f8f90b52ee2%3A4557615373'
+          s = s.replace('https://www.etsy.com/search?q=50%2030%2020%20budget%20planner', listing)
+          s = s.replace('https://www.etsy.com/shop/EverlineAutomation', listing)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Remove trigger and commit changes
+        run: |
+          rm -f trigger-etsy-link.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html trigger-etsy-link.txt
+          git diff --cached --quiet || git commit -m 'Update Etsy listing links'
+          git push
